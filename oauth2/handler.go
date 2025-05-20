@@ -1067,12 +1067,10 @@ func (h *Handler) oauth2TokenExchange(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) oAuth2Authorize(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	ctx := r.Context()
 
-	fmt.Println("________________here2_____________")
 	authorizeRequest, err := h.r.OAuth2Provider().NewAuthorizeRequest(ctx, r)
 	fmt.Printf("%v", authorizeRequest)
 	if err != nil {
 		x.LogError(r, err, h.r.Logger())
-		fmt.Println("________________here3_____________")
 		h.writeAuthorizeError(w, r, authorizeRequest, err)
 		return
 	}
@@ -1080,17 +1078,14 @@ func (h *Handler) oAuth2Authorize(w http.ResponseWriter, r *http.Request, _ http
 	session, flow, err := h.r.ConsentStrategy().HandleOAuth2AuthorizationRequest(ctx, w, r, authorizeRequest)
 	if errors.Is(err, consent.ErrAbortOAuth2Request) {
 		x.LogAudit(r, nil, h.r.AuditLogger())
-		fmt.Println("________________here12_____________")
 		// do nothing
 		return
 	} else if e := &(fosite.RFC6749Error{}); errors.As(err, &e) {
 		x.LogAudit(r, err, h.r.AuditLogger())
-		fmt.Println("________________here4_____________")
 		h.writeAuthorizeError(w, r, authorizeRequest, err)
 		return
 	} else if err != nil {
 		x.LogError(r, err, h.r.Logger())
-		fmt.Println("________________here5_____________")
 		h.writeAuthorizeError(w, r, authorizeRequest, err)
 		return
 	}
@@ -1106,7 +1101,6 @@ func (h *Handler) oAuth2Authorize(w http.ResponseWriter, r *http.Request, _ http
 	openIDKeyID, err := h.r.OpenIDJWTStrategy().GetPublicKeyID(ctx)
 	if err != nil {
 		x.LogError(r, err, h.r.Logger())
-		fmt.Println("________________here6_____________")
 		h.writeAuthorizeError(w, r, authorizeRequest, err)
 		return
 	}
@@ -1116,7 +1110,6 @@ func (h *Handler) oAuth2Authorize(w http.ResponseWriter, r *http.Request, _ http
 		accessTokenKeyID, err = h.r.AccessTokenJWTStrategy().GetPublicKeyID(ctx)
 		if err != nil {
 			x.LogError(r, err, h.r.Logger())
-			fmt.Println("________________here7_____________")
 			h.writeAuthorizeError(w, r, authorizeRequest, err)
 			return
 		}
@@ -1125,12 +1118,10 @@ func (h *Handler) oAuth2Authorize(w http.ResponseWriter, r *http.Request, _ http
 	obfuscatedSubject, err := h.r.ConsentStrategy().ObfuscateSubjectIdentifier(ctx, authorizeRequest.GetClient(), session.ConsentRequest.Subject, session.ConsentRequest.ForceSubjectIdentifier)
 	if e := &(fosite.RFC6749Error{}); errors.As(err, &e) {
 		x.LogAudit(r, err, h.r.AuditLogger())
-		fmt.Println("________________here8_____________")
 		h.writeAuthorizeError(w, r, authorizeRequest, err)
 		return
 	} else if err != nil {
 		x.LogError(r, err, h.r.Logger())
-		fmt.Println("________________here9_____________")
 		h.writeAuthorizeError(w, r, authorizeRequest, err)
 		return
 	}
@@ -1176,15 +1167,12 @@ func (h *Handler) oAuth2Authorize(w http.ResponseWriter, r *http.Request, _ http
 			MirrorTopLevelClaims:  h.c.MirrorTopLevelClaims(ctx),
 			Flow:                  flow,
 		})
-		fmt.Println("________________here11_____________")
 		return err
 	}); err != nil {
 		x.LogError(r, err, h.r.Logger())
-		fmt.Println("________________here10_____________")
 		h.writeAuthorizeError(w, r, authorizeRequest, err)
 		return
 	}
-	fmt.Println("________________here1_____________")
 
 	h.r.OAuth2Provider().WriteAuthorizeResponse(ctx, w, authorizeRequest, response)
 }
