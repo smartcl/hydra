@@ -1,0 +1,384 @@
+# ORY Hydra 项目配置文件
+
+# !!警告!! 此配置文件仅用于文档目的。不要在生产中使用它。作为所有配置项。
+
+# ORY Hydra可以使用配置文件和使用`--config path/to/config.yaml`传递文件位置进行配置。
+# 默认情况下，ORY Hydra将查找并加载文件 ~/.hydra.yaml。所有配置键也可以使用环境变量来设置。
+
+##   设置环境变量介绍开始   ##
+# 设置环境变量很容易：
+## Linux / OSX
+#
+# $ export MY_ENV_VAR=foo
+# $ hydra ...
+#
+# 或者:
+# $ MY_ENV_VAR=foo hydra ...
+#
+## Windows
+#
+### 打开命令提示符
+#
+# > set MY_ENV_VAR=foo
+# > hydra ...
+#
+### Powershell
+#
+# > $env:MY_ENV_VAR="foo"
+# > hydra ...
+#
+## Docker
+#
+# $ docker run -e MY_ENV_VAR=foo oryd/hydra:...
+#
+##  设置环境变量介绍结束   ##
+
+# 假设配置布局如下：
+#
+# serve:
+#   public:
+#     port: 4444
+#     something_else: foobar
+#
+# 键“something_else”可以通过在其路径上加上标记设置为环境变量：
+#   `serve.public.port.somethihng_else` -> `SERVE.PUBLIC.PORT.SOMETHING_ELSE`
+# 和替换 `.` with `_`:
+#   `serve.public.port.somethihng_else` -> `SERVE_PUBLIC_PORT_SOMETHING_ELSE`
+#
+# 环境变量总是重写配置文件中的值。以下是更多的例子：
+#
+# Configuration key | Environment variable |
+# ------------------|----------------------|
+# dsn               | DSN                  |
+# serve.admin.host  | SERVE_ADMIN_HOST     |
+# ------------------|----------------------|
+#
+#
+# 清单项目，例如
+#
+# secrets:
+#   system:
+#     - this-is-the-primary-secret
+#     - this-is-an-old-secret
+#     - this-is-another-old-secret
+#
+# 在使用环境变量时，必须使用','分隔。相当于代码部分#的环境变量 以上是：
+#
+# Linux/macOS: $ export SECRETS_SYSTEM=this-is-the-primary-secret,this-is-an-old-secret,this-is-another-old-secret
+# Windows: > set SECRETS_SYSTEM=this-is-the-primary-secret,this-is-an-old-secret,this-is-another-old-secret
+
+# 日志配置日志记录器
+log:
+  # 设置日志级别，参数支持 "panic", "fatal", "error", "warn", "info" and "debug".默认"info"级别
+  level: info
+  # 设置日志格式。未定义基于文本的日志格式，或设置为JSON格式。
+  format: json
+  leak_sensitive_values: true
+
+# 服务控制http（s）守护进程的配置
+serve:
+  # 公共控制为公共API端点服务的公共守护进程，比如 /oauth2/auth, /oauth2/token, /.well-known/jwks.json
+  public:
+    # 公共API端点服务监听的端口号，默认是4444
+    port: 4444
+    # 接口或 Unix socket ory Hydra应该侦听并处理公共API请求。
+    # 使用前缀“unix：”指定unix socket的路径。 在所有接口上留下空的侦听器。
+    host: localhost # 在默认的所有设备上，请将此删除或空以侦听
+    # host: unix:/path/to/socket
+
+    # Cors为公共端点配置跨域资源共享。
+    cors:
+      # 将启用的设置为true以启用CORS。默认为false。
+      enabled: false
+      # allowed_origins是一个可以执行跨域请求的起源列表（逗号分隔值）。
+      # 如果清单中有特殊的*值，则将允许所有起源。原点可以包含一个通配符（*）来替换0个或更多个字符（即。http://*.domain.com）。
+      # 每个起源只能使用一个通配符。如果为空或未定义，则默认为‘*’，允许来自每个域的CORS（如果启用CORS：true）。
+      allowed_origins:
+        - https://example.com
+        - https://*.example.com
+      #允许方法是允许用户代理与跨域一起使用的HTTP方法列表请求。默认为列出的方法。
+      allowed_methods:
+        - POST
+        - GET
+        - PUT
+        - PATCH
+        - DELETE
+
+      # 允许客户端在跨域请求中使用的非简单标头列表。默认为列出的值。
+      allowed_headers:
+        - Authorization
+        - Content-Type
+
+      # 设置哪些标题（逗号分隔的值）安全地公开给CORSAPI规范的API。默认为列出的值。
+      exposed_headers:
+        - Content-Type
+
+      #设置请求是否可以包括用户凭据，如cookie、HTTP身份验证或客户端SSL证书。默认为true
+      allow_credentials: true
+      # 设置可以缓存飞行前请求的结果的时间（以秒为单位）。
+      # 如果设置为0，每个请求在之前有一个飞行前请求。默认为0。
+      max_age: 10
+
+      # 如果设置为true，则添加额外的日志输出以调试服务器端CORS问题。默认为false。
+      debug: true
+
+    # 公共服务器的访问日志配置。
+#    access_log:
+      # 禁用健康端点的访问日志。
+#      disable_for_health: false
+
+      # admin控制为adminAPI端点服务的admin守护进程，如 /jwk, /client, ...
+  admin:
+    # admin API端点服务监听的端口号，默认是4445
+    port: 4445
+    # 接口或unix套接字ory Hydra应该侦听并处理管理API请求。
+    #使用前缀"unix"指定unix套接字的路径。在所有接口上留下空的侦听器。
+    host: localhost # 省略或空听所有的设备，这是默认的。
+    # host: unix:/path/to/socket
+
+    # cors配置 Cross Origin资源共享的admin端点.
+    cors:
+      # 将启用的设置为true以启用CORS。默认为false。
+      enabled: false
+      # allowed_origins是可以从中执行跨域请求的源（逗号分隔值）列表。
+      #如果列表中存在特殊*值，则允许所有原点。原点可以包含通配符（*）
+      #替换0个或多个字符（即：http://*.domain.com）。每个原点只能使用一个通配符。
+      # 如果为空或未定义，则默认为“*”，允许来自每个域的CORS（如果CORS.enabled:true）。
+      allowed_origins:
+        - https://example.com
+        - https://*.example.com
+      # allowed_methods是允许用户代理跨域使用的HTTP方法的列表请求。默认为 GET and POST.
+      allowed_methods:
+        - POST
+        - GET
+        - PUT
+        - PATCH
+        - DELETE
+
+      #允许客户端用于跨域请求的非简单头列表。默认为列出的值。
+      allowed_headers:
+        - Authorization
+        - Content-Type
+
+      # 设置哪些头（逗号分隔值）可以安全地公开给CORS API规范的API。默认为列出的值。
+      exposed_headers:
+        - Content-Type
+
+      #设置请求是否可以包括用户凭据，如cookies、HTTP身份验证或客户端SSL证书。
+      allow_credentials: true
+      #设置可以缓存飞行前请求的结果的时间（秒）。如果设置为0，则每个请求在飞行前请求。默认为0。
+      max_age: 10
+
+      # 如果设置为true，则会向调试服务器端CORS问题添加其他日志输出。默认为false。
+      debug: true
+
+    # 管理服务器的访问日志配置。
+#    access_log:
+      # 禁用健康终结点的访问日志。
+#      disable_for_health: false
+
+  # tls配置HTTPS（HTTP over tls）。如果已配置，服务器将自动支持HTTP/2。
+#  tls:
+    # 密钥配置私钥（pem编码）
+#    key:
+      # 密钥可以从文件加载：生成秘钥网站 https://www.selfsignedcertificate.com/
+#      path: ./docs/hydra_private.key
+      # 或来自base64编码（不带填充）字符串：
+      #base64: LS0tLS1CRUdJTiBFTkNSWVBURUQgUFJJVkFURSBLRVktLS0tLVxuTUlJRkRqQkFCZ2txaGtpRzl3MEJCUTB3...
+
+    # cert configures the TLS certificate (PEM encoded)
+#    cert:
+      # 证书可以从文件中加载：生成秘钥网站 https://www.selfsignedcertificate.com/
+#      path: ./docs/hydra_certificate.cert
+      # 或来自base64编码（不带填充）字符串：
+      #base64: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tXG5NSUlEWlRDQ0FrMmdBd0lCQWdJRVY1eE90REFOQmdr...
+
+    #白名单一个或多个CIDR地址范围，并允许他们终止TLS连接。
+    #请注意，必须设置X-Forwarded-Proto头，并且除了您的代理/网关/负载平衡器。支持ipv4和ipv6。
+    #
+    # 当设置此选项时，Hydra提供http而不是https。
+    # 有关更多信息，请访问：https://www.ory.sh/docs/hydra/production#tls-termination
+#    allow_termination_from:
+#      - 127.0.0.1/32
+
+# dsn设置数据源名称。这将配置ORY Hydra保存数据的后端。
+#
+## 内存数据库
+#
+# 如果dsn是“内存”，则数据将写入内存，并在重新启动此实例时丢失。可以使用DSN环境变量设置此值：
+#
+## SQL数据库
+#
+# ORY Hydra支持流行的SQL数据库。有关更详细的配置信息，请转到：https://www.ory.sh/docs/hydra/dependencies-environment#sql
+
+#PostgreSQL（推荐）
+# 如果dsn以 postgres:// PostgreSQL作为后端存储数据库：连接dsn示例如下
+# dsn: dsn=postgres://user:password@host:123/database
+#
+### MySQL数据库
+# 如果dsn以 mysql:// MySQL作为后端存储数据库:连接dsn示例如下
+# dsn: mysql://user:password@tcp(host:123)/database
+
+
+### CockroachDB
+# 如果dsn以cockroach:// CockroachDB 作为后端存储数据库:连接dsn示例如下
+# dsn: cockroach://user:password@host:123/database
+#
+dsn: mysql://root:123456@tcp(127.0.0.1:3306)/hydra
+
+# webfinger配置./well-known/settings
+webfinger:
+  # jwks配置/.well-known/jwks.json端点。
+  jwks:
+    # 广播密钥是应该在该端点公开的JSON Web密钥列表。这通常是
+    #用于验证OpenID Connect ID令牌的公钥。但是，您可能还需要在此处添加其他键。
+    broadcast_keys:
+      - hydra.openid.id-token # 默认情况下，此密钥始终公开
+      # - hydra.jwt.access-token # 当OAuth2访问令牌策略设置为JWT时，将公开此密钥。
+
+  #oidc_discovery配置OpenID Connect discovery（/.well-known/OpenID配置）
+  oidc_discovery:
+    client_registration_url: https://my-service.com/clients
+    # 要广播的受支持声明的列表。始终包括声明“sub”：
+    supported_claims:
+      - email
+      - username
+    # 作用域OAuth 2.0客户端可以请求。始终包括作用域“offline”、“offline\u access”和“openid”。
+    supported_scope:
+      - email
+      - whatever
+      - read.photos
+
+    # 要在OpenID Connect上公布的userinfo端点的URL发现终结点/.well-known/openid配置。
+    # 默认为ORY Hydra的userinfo端点，位于/userinfo。如果要自己处理此终结点，请设置此值。
+    userinfo_url: https://example.org/my-custom-userinfo-endpoint
+
+# oidc配置OpenID Connect特性。
+oidc:
+  # subject_identifiers配置subject Identifier算法。
+  # 有关更多信息，请参阅文档：https://www.ory.sh/docs/hydra/advanced#subject-identifier-algorithms
+#  subject_identifiers:
+    # 要启用哪些算法。默认为"public"
+#    enabled:
+#      - pairwise
+#      - public
+    # 配置成对算法
+#    pairwise:
+      # 如果启用“成对”，则必须定义 salt属性
+#      salt: some-random-salt
+
+  #动态客户机注册配置OpenID Connect动态客户机注册（公开为管理端点/clients/…）
+  dynamic_client_registration:
+
+    # OpenID Connect动态客户端注册规范没有白名单OAuth 2.0范围的概念。
+    # 如果你要公开动态客户端注册，应为新注册的客户端设置启用的默认作用域。
+    # 请记住，用户可以通过在注册负载中设置“scope”键来覆盖此默认值，有效地禁用白名单作用域的概念。
+    default_scope:
+      - openid
+      - offline
+      - offline_access
+
+urls:
+  self:
+    # 此值将用作访问和ID令牌中的"issuer"。一定是指定并使用HTTPS协议，除非设置了--dangerous-force-http 。
+    # 这通常应该是相等的为了公众的价值。
+    issuer: https://localhost:4444/
+
+    # 这是ORY Hydra安装的公共终结点的基本位置。这通常应该是相等的对发行人的价值。
+    # 如果未指定，则返回到颁发者值。
+    public: https://localhost:4444/
+
+  # 设置login属性为 用户登录和同意流的终结点。默认为内部回退URL。
+  login: https://my-login.app/login
+  # 设置consent节点属性， 用户登录和同意流的终结点。默认为内部回退URL。
+  consent: https://my-consent.app/consent
+  # 设置注销终结点。默认为内部回退URL。
+  logout: https://my-logout.app/logout
+  # 设置错误端点。当发生OAuth2错误而无法发回时，将显示错误页面给客户。默认为内部回退URL。
+  error: https://my-error.app/error
+  # 当用户代理请求注销时，它将在默认情况下重定向到此url。
+  post_logout_redirect: https://my-example.app/logout-successful
+
+strategies:
+  scope: wildcard
+  # 您可以使用JSON Web令牌作为访问令牌。
+  # 但说真的。别那么做。这不是一个好主意，有很多警告和微妙的安全影响。阅读更多： https://www.ory.sh/docs/hydra/advanced#json-web-tokens
+  #
+  #  access_token: jwt
+
+# 配置生存时间
+ttl:
+  # 配置用户登录和同意流可能需要多长时间。默认为1小时。
+  login_consent_request: 1h
+  # 配置访问令牌有效的时间。默认为1小时。
+  access_token: 1h
+  # 配置刷新令牌有效的时间。默认值为720h。设置为-1可使刷新令牌永不过期。
+  refresh_token: 720h
+  # 配置标识令牌有效的时间。默认为1小时。
+  id_token: 1h
+  # 配置验证代码有效的时间。默认值为10秒。
+  auth_code: 10m
+
+oauth2:
+  #如果要与OAuth 2.0客户端共享错误调试信息，请将此设置为true。
+  #请记住，在处理错误时，调试信息非常有价值，但也可能会暴露数据库错误、代码和类似错误。默认为false。
+  expose_internal_errors: false
+  # 配置哈希算法。目前只支持BCrypt
+  hashers:
+    # 配置用于哈希客户端机密的BCrypt哈希算法。
+    bcrypt:
+      # 设置BCrypt成本。最小值为4，默认值为10。值越高，CPU时间就越多，用于生成哈希.
+      cost: 10
+  pkce:
+    # 如果希望对所有客户端强制执行PKCE，请将此设置为true。
+    enforced: false
+
+# secrets部分配置用于对多个系统进行加密和签名的机密。所有的秘密都可以旋转，
+#有关此主题的详细信息，请导航到： https://www.ory.sh/docs/hydra/advanced#rotation-of-hmac-token-signing-and-database-and-cookie-encryption-keys
+secrets:
+  #系统机密的长度必须至少为16个字符。如果没有提供，将生成一个。
+  # 它们是钥匙用于使用AES-GCM（256位）加密敏感数据并验证HMAC签名。
+  #列表中的第一项用于签名和加密。整个列表用于验证签名还有解密。
+  system:
+    - this-is-the-primary-secret
+    - this-is-an-old-secret
+    - this-is-another-old-secret
+  #用于加密cookie会话的机密。默认为secrets.system。建议使用一个单独的生产秘密。
+  #列表中的第一项用于签名和加密。整个列表用于验证签名还有解密。
+  cookie:
+    - this-is-the-primary-secret
+    - this-is-an-old-secret
+    - this-is-another-old-secret
+
+# 如果已设置，则启用分析。使用“cpu”启用cpu分析，使用“mem”启用内存分析。更多细节在分析时，转到： https://blog.golang.org/profiling-go-programs
+profiling: cpu
+# profiling: mem
+
+#ORY Hydra支持分布式跟踪。
+#tracing:
+  # 将此设置为要使用的跟踪后端。目前支持jaeger。如果省略或为空，则跟踪将被禁用。
+#  provider: jaeger
+  # 指定要在跟踪程序上使用的服务名称。
+#  service_name: ORY Hydra
+#  providers:
+    # 配置jaeger跟踪后端。
+#    jaeger:
+      # jaeger代理应将spans发送到的地址
+#      local_agent_address: 127.0.0.1:6831
+      # 跟踪头格式
+#      propagation: jaeger
+#      sampling:
+        # 要使用的采样器的类型。支持：
+        # - const
+        # - probabilistic
+        # - ratelimiting
+#        type: const
+        # 传递给已配置的采样器类型的值。支持的值：这取决于使用的采样策略：
+        # - const: 0 or 1 (全有或全无)
+        #  rateLimiting（速率限制）：恒定速率（例如，将此设置为3将以每秒3个跟踪的速率采样请求）
+        # - rateLimiting: 3
+        # 介于0~1之间的值，比如0.5
+        # - probabilistic: 0.5
+#        value: 1.0
+        # jaeger代理的HTTP采样服务器的地址
+#        server_url: http://localhost:5778/sampling

@@ -953,7 +953,7 @@ The code for these tests is located in
 To run Ory Hydra against the OpenID Connect conformity suite, run
 
 ```shell script
-$ test/conformity/start.sh --build
+$ test/conformity/start_all_serve.sh --build
 ```
 
 and then in a separate shell

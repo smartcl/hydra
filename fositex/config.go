@@ -9,6 +9,7 @@ import (
 	"hash"
 	"html/template"
 	"net/url"
+	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
 
@@ -44,6 +45,30 @@ type Config struct {
 	revocationHandlers         fosite.RevocationHandlers
 
 	*config.DefaultProvider
+}
+
+func (c *Config) GetDeviceAndUserCodeLifespan(ctx context.Context) time.Duration {
+	return time.Minute
+}
+
+func (c *Config) GetDeviceEndpointHandlers(ctx context.Context) fosite.DeviceEndpointHandlers {
+	return nil
+}
+
+func (c *Config) GetUserCodeLength(ctx context.Context) int {
+	return 64
+}
+
+func (c *Config) GetUserCodeSymbols(ctx context.Context) []rune {
+	return nil
+}
+
+func (c *Config) GetDeviceVerificationURL(ctx context.Context) string {
+	return ""
+}
+
+func (c *Config) GetDeviceAuthTokenPollingInterval(ctx context.Context) time.Duration {
+	return time.Minute
 }
 
 var defaultResponseModeHandler = fosite.NewDefaultResponseModeHandler()

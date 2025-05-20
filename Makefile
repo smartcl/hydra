@@ -200,3 +200,10 @@ generate: .bin/mockgen
 
 licenses: .bin/licenses node_modules  # checks open-source licenses
 	.bin/licenses
+
+arm_linux:
+    GOOS=linux GOARCH=arm64 go build
+
+new_img_from_container:
+	docker cp hydra ory-kratos-hydra-integration-demo-hydra-1:/usr/bin/hydra
+    docker commit -a "cl" -m "保存当前状态" ory-kratos-hydra-integration-demo-hydra-1 oryd/hydra:v2.3.0.1

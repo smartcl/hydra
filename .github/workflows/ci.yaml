@@ -27,7 +27,7 @@ jobs:
         with:
           go-version: "1.22"
       - name: Start service
-        run: ./test/conformance/start.sh
+        run: ./test/conformance/start_all_serve.sh
       - name: Run tests
         run: ./test/conformance/test.sh -v -short -parallel 16
 
