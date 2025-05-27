@@ -7,6 +7,7 @@ import (
 	"context"
 	"crypto/subtle"
 	"encoding/json"
+	"github.com/ory/hydra/v2/selfmodule/adminjwt"
 	"io"
 	"net/http"
 	"strings"
@@ -90,6 +91,11 @@ type createOAuth2Client struct {
 //	  400: errorOAuth2BadRequest
 //	  default: errorOAuth2Default
 func (h *Handler) createOAuth2Client(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	err := adminjwt.VerifyAdminToken(r)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
 	c, err := h.CreateClient(r, h.r.ClientValidator().Validate, false)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
@@ -248,6 +254,11 @@ type setOAuth2Client struct {
 //	  404: errorOAuth2NotFound
 //	  default: errorOAuth2Default
 func (h *Handler) setOAuth2Client(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	err := adminjwt.VerifyAdminToken(r)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
 	var c Client
 	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
 		h.r.Writer().WriteError(w, r, errorsx.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to decode the request body: %s", err)))
@@ -419,6 +430,11 @@ type patchOAuth2Client struct {
 //	  404: errorOAuth2NotFound
 //	  default: errorOAuth2Default
 func (h *Handler) patchOAuth2Client(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	err := adminjwt.VerifyAdminToken(r)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
 	patchJSON, err := io.ReadAll(r.Body)
 	if err != nil {
 		h.r.Writer().WriteError(w, r, err)
@@ -507,6 +523,11 @@ type listOAuth2ClientsParameters struct {
 //	  200: listOAuth2Clients
 //	  default: errorOAuth2Default
 func (h *Handler) listOAuth2Clients(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	err := adminjwt.VerifyAdminToken(r)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
 	page, itemsPerPage := x.ParsePagination(r)
 	filters := Filter{
 		Limit:  itemsPerPage,
@@ -573,6 +594,11 @@ type adminGetOAuth2Client struct {
 //	  200: oAuth2Client
 //	  default: errorOAuth2Default
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	err := adminjwt.VerifyAdminToken(r)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
 	var id = ps.ByName("id")
 	c, err := h.r.ClientManager().GetConcreteClient(r.Context(), id)
 	if err != nil {
@@ -683,6 +709,11 @@ type deleteOAuth2Client struct {
 //	  204: emptyResponse
 //	  default: genericError
 func (h *Handler) deleteOAuth2Client(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	err := adminjwt.VerifyAdminToken(r)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
 	var id = ps.ByName("id")
 	if err := h.r.ClientManager().DeleteClient(r.Context(), id); err != nil {
 		h.r.Writer().WriteError(w, r, err)
@@ -723,6 +754,11 @@ type setOAuth2ClientLifespans struct {
 //	  200: oAuth2Client
 //	  default: genericError
 func (h *Handler) setOAuth2ClientLifespans(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	err := adminjwt.VerifyAdminToken(r)
+	if err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
 	var id = ps.ByName("id")
 	c, err := h.r.ClientManager().GetConcreteClient(r.Context(), id)
 	if err != nil {
